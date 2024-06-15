@@ -1,0 +1,13 @@
+https://www.youtube.com/watch?v=POyBab-M6tM
+https://github.com/LetTheCodePlay/OpenAIGym/tree/main/Pygame/Snake
+
+https://medium.com/@lfoster49203/reinforcement-learning-with-proximal-policy-optimization-ppo-f8a79455ec86
+https://arxiv.org/pdf/1707.06347
+https://towardsdatascience.com/elegantrl-mastering-the-ppo-algorithm-part-i-9f36bc47b791
+https://medium.com/deeplearningmadeeasy/simple-ppo-implementation-e398ca0f2e7c
+https://www.youtube.com/watch?v=hlv79rcHws0
+
+
+
+# Stable baselines 3
+https://www.youtube.com/watch?v=PxoG0A2QoFs
