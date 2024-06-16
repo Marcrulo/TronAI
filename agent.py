@@ -1,19 +1,22 @@
-
 from model import PolicyNetwork, ValueNetwork
 from memory import PPOMemory
 import numpy as np
 import torch 
+import yaml
+
+configs = yaml.safe_load(open("config.yaml"))
+
 
 class Agent:
-    def __init__(self, env):
-        self.actor  = PolicyNetwork(env.observation_space.shape)
-        self.critic = ValueNetwork(env.observation_space.shape)
-        self.memory = PPOMemory(batch_size=5)
+    def __init__(self, num_actions, num_observations):
+        self.actor  = PolicyNetwork(num_observations, num_actions)
+        self.critic = ValueNetwork(num_observations)
+        self.memory = PPOMemory(batch_size=configs["model"]["batch_size"])
     
-        self.n_epochs = 4  # num. epochs per set of mini-batches
-        self.gamma = 0.99  # discount
-        self.lambd = 0.95  # regularization
-        self.epsilon = 0.1 # clip
+        self.n_epochs = configs["model"]["n_epochs"] # num. epochs per set of mini-batches
+        self.gamma = configs["model"]["gamma"]       # discount
+        self.lambd = configs["model"]["lambda"]      # regularization
+        self.epsilon = configs["model"]["epsilon"]   # clip
     
     def remember(self, state, action, prob, reward, done, val):
         self.memory.store_memory(state, action, prob, reward, done, val)

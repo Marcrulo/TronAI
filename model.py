@@ -4,25 +4,35 @@ from torch.distributions.categorical import Categorical
 from torch import optim
 import numpy as np
 import os
+import yaml
+
+configs = yaml.safe_load(open("config.yaml"))
 
 # Actor
 class PolicyNetwork(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, num_observations, num_actions):
         super(PolicyNetwork, self).__init__()
-        self.input_dim = input_dim
+        self.num_observations = num_observations
+        self.num_actions = num_actions
         
-        self.checkpoint_file = os.path.join("models", 'actor_checkpoint')
+        if configs["env"]["tron"]:
+            modelname = "tron"
+        else:
+            modelname = configs["env"]["name"]
+        self.checkpoint_file = os.path.join("models", modelname,"actor_checkpoint")
+        self.hidden_units = configs["model"]["hidden_units"]
+        self.learning_rate = configs["model"]["learning_rate"]
         
         self.actor_seq = nn.Sequential(
-            nn.Linear(*self.input_dim, 256),
+            nn.Linear(*self.num_observations, self.hidden_units),
             nn.ReLU(),
-            nn.Linear(256, 256),
+            nn.Linear(self.hidden_units, self.hidden_units),
             nn.ReLU(),
-            nn.Linear(256, 2),
+            nn.Linear(self.hidden_units, self.num_actions),
             nn.Softmax(dim=-1)
         )
         
-        self.optimizer = optim.Adam(self.parameters(), lr=3e-4)
+        self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.to(self.device)
         
@@ -40,20 +50,27 @@ class PolicyNetwork(nn.Module):
 
 # Critic
 class ValueNetwork(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self, num_observations):
         super(ValueNetwork, self).__init__()
+        self.num_observations = num_observations
         
-        self.checkpoint_file = os.path.join("models", 'critic_checkpoint')
-        self.input_dim = input_dim
+        if configs["env"]["tron"]:
+            modelname = "tron"
+        else:
+            modelname = configs["env"]["name"]
+        self.checkpoint_file = os.path.join("models", modelname,"critic_checkpoint")
+        self.hidden_units = configs["model"]["hidden_units"]
+        self.learning_rate = configs["model"]["learning_rate"]
+        
         self.critic_seq = nn.Sequential(
-            nn.Linear(*self.input_dim, 256),
+            nn.Linear(*self.num_observations, self.hidden_units),
             nn.ReLU(),
-            nn.Linear(256, 256),
+            nn.Linear(self.hidden_units, self.hidden_units),
             nn.ReLU(),
-            nn.Linear(256, 1)
+            nn.Linear(self.hidden_units, 1)
         )
         
-        self.optimizer = optim.Adam(self.parameters(), lr=3e-4)
+        self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.to(self.device)
         

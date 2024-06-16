@@ -1,22 +1,28 @@
-# from tron_env import TronEnv
+from tron_env import TronEnv
 from matplotlib import pyplot as plt
 import os
 from agent import Agent
 import gym
 import numpy as np
 import pandas as pd
+from torch.utils import tensorboard
+import yaml
 
-# env = TronEnv(render_mode='human')
-# env = gym.make("CartPole-v1", render_mode="human")
-env = gym.make("LunarLander-v2")
-N = 20
+configs = yaml.safe_load(open("config.yaml"))
 
-player1 = Agent(env)
-n_games = 300
+if configs["env"]["tron"]:
+    env = TronEnv(render_mode=configs["env"]["render_mode"])
+else:
+    env = gym.make(configs["env"]["name"], render_mode=configs["env"]["render_mode"])
+
+player1 = Agent(num_actions=env.action_space.n, 
+                num_observations=env.observation_space.shape)
+w = tensorboard.SummaryWriter()
+N = configs["model"]["trajectory_length"]
+n_games = configs["training"]["episodes"]
 
 best_score = -1000
 score_history = []
-
 learn_iters = 0
 n_steps = 0
 
@@ -35,6 +41,7 @@ for i in range(n_games):
             learn_iters += 1
         observation = observation_
     score_history.append(score)
+    w.add_scalar("score", score, i)
     avg_score = np.mean(score_history[-100:])
         
     if avg_score > best_score:

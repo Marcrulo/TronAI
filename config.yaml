@@ -1,0 +1,25 @@
+model:
+  lambda: 0.95
+  gamma: 0.99
+  epsilon: 0.2
+
+  learning_rate: 0.0003
+  hidden_units: 256
+
+  trajectory_length: 20
+  batch_size: 5
+
+  n_epochs: 6
+
+
+training:
+  episodes: 300
+
+eval:
+  episodes: 100
+
+env:
+  tron: True
+  name: "LunarLander-v2"
+  render_mode:  # "human" or <nothing>
+

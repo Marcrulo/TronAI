@@ -15,7 +15,7 @@ FPS = 10
 
 from model import PolicyNetwork
 obs_size = ROW*COLUMN + 2*ROW + 2*COLUMN
-Model = PolicyNetwork(obs_size)
+Model = PolicyNetwork((obs_size,), 4)
 
 class TronEnv(gym.Env):
     def __init__(self, render_mode=None):

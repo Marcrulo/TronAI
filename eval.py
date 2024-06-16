@@ -1,13 +1,16 @@
-
 from agent import Agent
 import gym
+import yaml
 
-env = gym.make("CartPole-v1", render_mode="human")
-player1 = Agent(env)
+configs = yaml.safe_load(open("config.yaml"))
+
+env = gym.make(configs["env"]["name"], render_mode="human")
+player1 = Agent(num_actions=env.action_space.n, 
+                num_observations=env.observation_space.shape)
 player1.load_models()
 
 # evaluate
-for i in range(100):
+for i in range(configs["eval"]["episodes"]):
     observation = env.reset()[0]
     done = False
     score = 0
