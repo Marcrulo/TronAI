@@ -1,4 +1,6 @@
+#############################
 model:
+
   lambda: 0.95
   gamma: 0.99
   epsilon: 0.2
@@ -6,20 +8,18 @@ model:
   learning_rate: 0.0003
   hidden_units: 256
 
-  trajectory_length: 20
-  batch_size: 5
+  trajectory_length: 8
+  batch_size: 4
 
   n_epochs: 6
-
-
+#############################
 training:
-  episodes: 300
-
+  episodes: 10000000
+#############################
 eval:
   episodes: 100
-
+#############################
 env:
-  tron: True
   name: "LunarLander-v2"
-  render_mode:  # "human" or <nothing>
-
+  render_mode: "rgb_array" # "human" , <nothing> , "rgb_array"
+#############################

@@ -1,10 +1,15 @@
+from tron_env import TronEnv
 from agent import Agent
 import gym
 import yaml
 
 configs = yaml.safe_load(open("config.yaml"))
 
-env = gym.make(configs["env"]["name"], render_mode="human")
+if configs["env"]["name"] == "tron":
+    env = TronEnv(render_mode="human")
+else:
+    env = gym.make(configs["env"]["name"], render_mode="human")
+
 player1 = Agent(num_actions=env.action_space.n, 
                 num_observations=env.observation_space.shape)
 player1.load_models()
