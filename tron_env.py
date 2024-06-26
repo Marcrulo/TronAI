@@ -8,14 +8,14 @@ from player import Player
 
 from matplotlib import pyplot as plt
 
-WIDTH, HEIGHT = 620, 620
+WIDTH, HEIGHT = 320, 320
 SCALE = 20
 ROW, COLUMN = WIDTH//SCALE, HEIGHT//SCALE
 FPS = 10
 
 from model import PolicyNetwork
 obs_size = ROW*COLUMN + 2*ROW + 2*COLUMN
-Model = PolicyNetwork((obs_size,), 4)
+Model = PolicyNetwork((obs_size,), 4, cnn=True)
 
 class TronEnv(gym.Env):
     def __init__(self, render_mode=None):
@@ -85,8 +85,8 @@ class TronEnv(gym.Env):
         if self.render_mode == 'human':
             self.render()
             
-        return self.observation, self.reward, self.done, {}
-            
+        # return self.observation, self.reward, self.done, {}, {}
+        return self.observation, 1, self.done, {}, {}
             
     def reset(self):
         self.reward = 0
@@ -115,7 +115,7 @@ class TronEnv(gym.Env):
             self.clock = pygame.time.Clock()
             self.render()
             
-        return self.observation
+        return [self.observation,{}]
         
     def render(self, render_mode='human'):
         # Background
@@ -134,8 +134,9 @@ class TronEnv(gym.Env):
             pygame.draw.rect(self.display, (0, (not i)*255,i*255), (player.x+SCALE, player.y+SCALE, SCALE, SCALE))
 
         # render env observation
-        # print(self.observation[ROW*COLUMN:-ROW-COLUMN])
-        # print(self.observation[ROW*COLUMN+ROW+COLUMN:])
+        # print(np.argmax(self.observation[ROW*COLUMN:-ROW-COLUMN]),
+        #       np.argmax(self.observation[ROW*COLUMN+ROW+COLUMN:]))
+        
         # plt.imshow(self.observation[:ROW*COLUMN].reshape(ROW,COLUMN), cmap='viridis', interpolation='nearest')
         # plt.show()
         
