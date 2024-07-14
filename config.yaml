@@ -1,17 +1,25 @@
 #############################
+game:
+
+  scale:  20
+  width:  320
+  height: 320
+  fps: 10
+
+#############################
 model:
 
   lambda: 0.95
   gamma: 0.99
   epsilon: 0.2
 
-  learning_rate: 0.0003
-  hidden_units: 256
+  learning_rate: 0.0005
+  hidden_units: 64
 
-  trajectory_length: 8
+  trajectory_length: 4
   batch_size: 4
 
-  n_epochs: 6
+  n_epochs: 3
 #############################
 training:
   episodes: 10000000
@@ -20,6 +28,7 @@ eval:
   episodes: 100
 #############################
 env:
-  name: "LunarLander-v2"
-  render_mode: "rgb_array" # "human" , <nothing> , "rgb_array"
+  name: "tron" # tron, ...
+  render_mode:  # "human" , <nothing> 
+  cnn: True
 #############################
