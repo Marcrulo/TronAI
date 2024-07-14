@@ -1,3 +1,4 @@
+# Imports
 from tron_env import TronEnv
 from matplotlib import pyplot as plt
 import os
@@ -6,23 +7,25 @@ import gym
 import numpy as np
 import pandas as pd
 from torch.utils import tensorboard
+import torch
 import yaml
 
+# Load the configuration file
 configs = yaml.safe_load(open("config.yaml"))
-if configs["env"]["render_mode"] == "rgb_array":
-    cnn = True
+cnn = configs["env"]["cnn"]
 
+# Create the environment
 if configs["env"]["name"] == "tron":
-    env = TronEnv(render_mode=configs["env"]["render_mode"])
+    env = TronEnv(render_mode=configs["env"]["render_mode"], cnn=cnn)
 else:
-    env = gym.make(configs["env"]["name"], render_mode=configs["env"]["render_mode"])
+    env = gym.make(configs["env"]["name"], render_mode=configs["env"]["render_mode"], cnn=cnn)
 _ = env.reset()
 
+# Create the agents
 if cnn:
-    obs_space = env.render().shape
+    obs_space = env.observation.shape
 else:
     obs_space = env.observation_space.shape
-    
     
 player1 = Agent(num_actions=env.action_space.n, 
                 num_observations=obs_space,
@@ -30,9 +33,13 @@ player1 = Agent(num_actions=env.action_space.n,
 player2 = Agent(num_actions=env.action_space.n,
                 num_observations=obs_space,
                 cnn=cnn)
+# player1.load_models()
+# player2.load_model_opponent(player1)
 
-
+# Create the tensorboard writer
 w = tensorboard.SummaryWriter()
+
+# Training loop
 N = configs["model"]["trajectory_length"]
 n_games = configs["training"]["episodes"]
 
@@ -43,20 +50,18 @@ n_steps = 0
 
 for i in range(n_games):
     observation = env.reset()[0]
+    observation2 = env.reset()[0]
     done = False
     score = 0
     game_length = 0
     while not done:
-        if cnn:
-            observation = env.render()
         action1, prob, val = player1.choose_action(observation)
         if configs["env"]["name"] == "tron": 
-            action2, _, _ = player2.choose_action(observation)
+            action2, _, _ = player2.choose_action(observation2)
             observation_, reward, done, _ , info = env.step(action1, take_bot_action=action2)
         else:
             observation_, reward, done, _ , info = env.step(action1)  
 
-        
         game_length += 1
         n_steps += 1
         score += reward
@@ -65,17 +70,24 @@ for i in range(n_games):
         if n_steps % N == 0:
             player1.learn()
             learn_iters += 1
-        observation = observation_
+        observation = observation_[0]
+        observation2 = observation_[1]
+        
+        # fig, ax = plt.subplots(1, 2)
+        # a = ax[0].imshow(observation)
+        # b = ax[1].imshow(observation2)
+        # fig.colorbar(a, ax=ax[0])
+        # fig.colorbar(b, ax=ax[1])
+        # plt.show()
+
     score_history.append(score)
     w.add_scalar("score", score, i)
-    w.add_scalar("game length", game_length, i)
-    avg_score = np.mean(score_history[-100:])
+    # w.add_scalar("game length", game_length, i)
+    avg_score = np.mean(score_history[-30:])
         
-    if avg_score > best_score:
+    if avg_score > best_score and learn_iters > 30:
         best_score = avg_score
         player1.save_models()
+        player2.load_model_opponent(player1)
             
     print(f"Episode {i:<8} score {score:<8.2f} avg_score {avg_score:<8.2f} time_steps {n_steps:<8} learning_steps {learn_iters:<8} best average {best_score}")
-
-plt.plot(pd.Series(score_history).rolling(10).mean())
-plt.show()

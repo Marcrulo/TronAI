@@ -14,6 +14,7 @@ class PolicyNetwork(nn.Module):
         super(PolicyNetwork, self).__init__()
         self.num_observations = num_observations
         self.num_actions = num_actions
+        self.cnn  = cnn
 
         modelname = configs["env"]["name"]
         self.dir = os.path.join("models", modelname)
@@ -23,18 +24,16 @@ class PolicyNetwork(nn.Module):
         self.hidden_units = configs["model"]["hidden_units"]
         self.learning_rate = configs["model"]["learning_rate"]
         
-        if cnn:
+        # game
+        scale = 1#configs['game']['scale']
+
+        if self.cnn:
             self.actor_seq = nn.Sequential(
-                nn.Conv2d(in_channels=3, out_channels=32, kernel_size=8, stride=4),
+                nn.Conv2d(in_channels=1, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
                 nn.ReLU(),
-                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
-                nn.ReLU(),
-                nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
-                nn.ReLU(),
+                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=scale*3, stride=1, padding=1),
                 nn.Flatten(),
-                nn.Linear(3136, self.hidden_units),
-                nn.ReLU(),
-                nn.Linear(self.hidden_units, self.hidden_units),
+                nn.Linear(16384,self.hidden_units),
                 nn.ReLU(),
                 nn.Linear(self.hidden_units, self.num_actions),
                 nn.Softmax(dim=-1)
@@ -44,6 +43,7 @@ class PolicyNetwork(nn.Module):
                 nn.Linear(*self.num_observations, self.hidden_units),
                 nn.ReLU(),
                 nn.Linear(self.hidden_units, self.hidden_units),
+                nn.Dropout(0.5),
                 nn.ReLU(),
                 nn.Linear(self.hidden_units, self.num_actions),
                 nn.Softmax(dim=-1)
@@ -54,11 +54,11 @@ class PolicyNetwork(nn.Module):
         self.to(self.device)
         
     def forward(self, x):
-        print(x.shape)
-        # x = self.actor_seq(x)
-        x = torch.tensor([0.25,0.25,0.25,0.25]).to(self.device)
+        x = np.expand_dims(x, axis=1)
+        x /= 2
+        x = torch.tensor(x).to(self.device)
+        x = self.actor_seq(x)
         x = Categorical(x)
-        
         return x
     
     def save_checkpoint(self):
@@ -73,7 +73,8 @@ class ValueNetwork(nn.Module):
     def __init__(self, num_observations, cnn=False):
         super(ValueNetwork, self).__init__()
         self.num_observations = num_observations
-        
+        self.cnn = cnn
+
         modelname = configs["env"]["name"]
         self.dir = os.path.join("models", modelname)
         if not os.path.exists(self.dir):
@@ -82,20 +83,19 @@ class ValueNetwork(nn.Module):
         self.hidden_units = configs["model"]["hidden_units"]
         self.learning_rate = configs["model"]["learning_rate"]
         
-        if cnn:
+        # game
+        scale = 1#configs['game']['scale']
+
+        if self.cnn:
             self.critic_seq = nn.Sequential(
-                nn.Conv2d(in_channels=3, out_channels=32, kernel_size=8, stride=4),
+                nn.Conv2d(in_channels=1, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
                 nn.ReLU(),
-                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
-                nn.ReLU(),
-                nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
-                nn.ReLU(),
+                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=scale*3, stride=1, padding=1),
                 nn.Flatten(),
-                nn.Linear(3136, self.hidden_units),
+                nn.Linear(16384,self.hidden_units),
+                nn.Dropout(0.5),
                 nn.ReLU(),
-                nn.Linear(self.hidden_units, self.hidden_units),
-                nn.ReLU(),
-                nn.Linear(self.hidden_units, 1)
+                nn.Linear(self.hidden_units, 1),
             )
         else:        
             self.critic_seq = nn.Sequential(
@@ -111,8 +111,11 @@ class ValueNetwork(nn.Module):
         self.to(self.device)
         
     def forward(self, x):
-        # x = self.critic_seq(x)
-        x = torch.tensor([1.0]).to(self.device)
+        x = np.expand_dims(x, axis=1)
+        x /= 2
+        x = torch.tensor(x).to(self.device)
+        x = self.critic_seq(x)
+        
         return x
 
     def save_checkpoint(self):

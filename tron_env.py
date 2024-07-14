@@ -5,29 +5,48 @@ import gym
 from gym import spaces
 import numpy as np
 from player import Player
-
+import yaml
 from matplotlib import pyplot as plt
 
-WIDTH, HEIGHT = 320, 320
-SCALE = 20
+configs = yaml.safe_load(open("config.yaml"))
+
+WIDTH, HEIGHT = configs['game']['width'], configs['game']['height']
+SCALE = configs['game']['scale']
 ROW, COLUMN = WIDTH//SCALE, HEIGHT//SCALE
-FPS = 10
+FPS = configs['game']['fps']
+
+cnn = configs["env"]["cnn"]
 
 from model import PolicyNetwork
 obs_size = ROW*COLUMN + 2*ROW + 2*COLUMN
 Model = PolicyNetwork((obs_size,), 4, cnn=True)
 
 class TronEnv(gym.Env):
-    def __init__(self, render_mode=None):
+    def __init__(self, render_mode=None, cnn=False):
         self.render_mode = render_mode
+        self.cnn = cnn
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-1, high=1, shape=(obs_size,), dtype=int)
         self.directions = ['right', 'left', 'up', 'down']
-        pygame.init()
-        pygame.display.set_caption('Tron')
-        self.display = pygame.display.set_mode((WIDTH, HEIGHT))
-        self.player_ids = [-1,1]
+        self.player_ids = [2,-2]
 
+        if self.render_mode == 'human':
+            pygame.init()
+            self.display = pygame.display.set_mode((WIDTH, HEIGHT))
+            pygame.display.set_caption('Tron')
+            self.clock = pygame.time.Clock()
+
+    def obs_to_img(self, obs, p1, p2):
+        img1 = obs.copy()
+        img1[p1.y//SCALE, p1.x//SCALE] = self.player_ids[0]
+        img1[p2.y//SCALE, p2.x//SCALE] = self.player_ids[1]
+        # img = np.expand_dims(img, axis=0)
+
+        img2 = obs.copy()
+        img2[p1.y//SCALE, p1.x//SCALE] = self.player_ids[1]
+        img2[p2.y//SCALE, p2.x//SCALE] = self.player_ids[0]
+
+        return img1, img2
         
     def step(self, action, take_bot_action = False):
                 
@@ -57,9 +76,9 @@ class TronEnv(gym.Env):
             self.p2.dir = 'left'
         
         
-        self.observation = np.zeros((ROW, COLUMN))
-        self.head1 = np.zeros(ROW+COLUMN)
-        self.head2 = np.zeros(ROW+COLUMN)
+        self.observation = -np.ones((ROW, COLUMN))
+        self.head1 = -np.ones(ROW+COLUMN)
+        self.head2 = -np.ones(ROW+COLUMN)
         
         heads = [self.head1, self.head2]
         for i, player in enumerate(self.players):
@@ -67,12 +86,11 @@ class TronEnv(gym.Env):
             heads[i][player.y//SCALE] = 1
             heads[i][ROW+player.x//SCALE] = 1
             for t in player.trail:
-                self.observation[t[1]//SCALE, t[0]//SCALE] = self.player_ids[i]
-        self.observation = np.concatenate((self.observation.flatten(), self.head1, self.head2), axis=0)
+                self.observation[t[1]//SCALE, t[0]//SCALE] = 0 #self.player_ids[i]
                 
         if self.p1.alive and not self.p2.alive:
             self.reward = 100
-        elif not self.p1.alive and self.p2.alive:
+        elif not self.p1.alive:
             self.reward = -100
         else:
             self.reward = -1
@@ -82,11 +100,18 @@ class TronEnv(gym.Env):
         else:
             self.done = True
 
-        if self.render_mode == 'human':
+        if self.cnn:
+            self.observation, self.observation2 = self.obs_to_img(self.observation, self.p1, self.p2)
+        else:
+            self.observation = np.concatenate((self.observation.flatten(), self.head1, self.head2), axis=0)
+            self.observation2 = None
+        
+        if self.render_mode == "human":
             self.render()
+        
             
         # return self.observation, self.reward, self.done, {}, {}
-        return self.observation, 1, self.done, {}, {}
+        return (self.observation, self.observation2), 1, self.done, {}, {}
             
     def reset(self):
         self.reward = 0
@@ -100,24 +125,29 @@ class TronEnv(gym.Env):
                          start_dir=random.choice(self.directions))
         self.players = [self.p1, self.p2]
         
-        self.observation = np.zeros((ROW, COLUMN))
-        self.head1 = np.zeros(ROW+COLUMN)
-        self.head2 = np.zeros(ROW+COLUMN)
+        self.observation = -np.ones((ROW, COLUMN))
+        self.head1 = -np.ones(ROW+COLUMN)
+        self.head2 = -np.ones(ROW+COLUMN)
         
         self.head1[self.p1.y//SCALE] = 1
         self.head1[ROW+self.p1.x//SCALE] = 1
         self.head2[self.p2.y//SCALE] = 1
         self.head2[ROW+self.p2.x//SCALE] = 1
         
-        self.observation = np.concatenate((self.observation.flatten(), self.head1, self.head2), axis=0)
         
+        if self.cnn:
+            self.observation, _ = self.obs_to_img(self.observation, self.p1, self.p2)
+        else:
+            self.observation = np.concatenate((self.observation.flatten(), self.head1, self.head2), axis=0)
+
         if self.render_mode == 'human':
             self.clock = pygame.time.Clock()
             self.render()
+        
             
         return [self.observation,{}]
         
-    def render(self, render_mode='human'):
+    def render(self):
         # Background
         self.display.fill((67,70,75))
         
@@ -132,16 +162,7 @@ class TronEnv(gym.Env):
             for t in player.trail:
                 pygame.draw.rect(self.display, (0, (not i)*150,i*150), (t[0]+SCALE, t[1]+SCALE, SCALE, SCALE))
             pygame.draw.rect(self.display, (0, (not i)*255,i*255), (player.x+SCALE, player.y+SCALE, SCALE, SCALE))
-
-        # render env observation
-        # print(np.argmax(self.observation[ROW*COLUMN:-ROW-COLUMN]),
-        #       np.argmax(self.observation[ROW*COLUMN+ROW+COLUMN:]))
         
-        # plt.imshow(self.observation[:ROW*COLUMN].reshape(ROW,COLUMN), cmap='viridis', interpolation='nearest')
-        # plt.show()
-        
-        
-
         pygame.display.update()
         self.clock.tick(FPS)
         

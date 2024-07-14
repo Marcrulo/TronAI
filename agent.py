@@ -30,10 +30,15 @@ class Agent:
         print("... Loading models ...")
         self.actor.load_checkpoint()
         self.critic.load_checkpoint()
-        
+
+    def load_model_opponent(self, opponent):
+        print("... Copying models ...")
+        self.actor.load_state_dict(torch.load(opponent.actor.checkpoint_file))
+        self.critic.load_state_dict(torch.load(opponent.critic.checkpoint_file))
+
     def choose_action(self, observation):
-        state = torch.tensor(observation, dtype=torch.float32).to(self.actor.device)
-        
+        state = torch.tensor(observation, dtype=torch.float32).to(self.actor.device).unsqueeze(0)
+
         dist = self.actor(state)
         value = self.critic(state)
         action = dist.sample()
@@ -90,7 +95,10 @@ class Agent:
                 total_loss = actor_loss + 0.5*critic_loss
                 self.actor.optimizer.zero_grad()
                 self.critic.optimizer.zero_grad()
-                total_loss.backward()
+
+                with torch.autograd.set_detect_anomaly(True):
+                    total_loss.backward()
+                    
                 self.actor.optimizer.step()
                 self.critic.optimizer.step()
                 
