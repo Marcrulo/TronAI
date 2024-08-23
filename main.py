@@ -9,6 +9,7 @@ import pandas as pd
 from torch.utils import tensorboard
 import torch
 import yaml
+import time 
 
 # Load the configuration file
 configs = yaml.safe_load(open("config.yaml"))
@@ -48,6 +49,9 @@ score_history = []
 learn_iters = 0
 n_steps = 0
 
+# start timer
+start = time.time()
+
 for i in range(n_games):
     observation = env.reset()[0]
     observation2 = env.reset()[0]
@@ -81,8 +85,9 @@ for i in range(n_games):
         # plt.show()
 
     score_history.append(score)
+    delta_time = (time.time()-start)/60
     w.add_scalar("score", score, i)
-    # w.add_scalar("game length", game_length, i)
+    w.add_scalar("time", delta_time, i)
     avg_score = np.mean(score_history[-30:])
         
     if avg_score > best_score and learn_iters > 30:
@@ -90,4 +95,4 @@ for i in range(n_games):
         player1.save_models()
         player2.load_model_opponent(player1)
             
-    print(f"Episode {i:<8} score {score:<8.2f} avg_score {avg_score:<8.2f} time_steps {n_steps:<8} learning_steps {learn_iters:<8} best average {best_score}")
+    print(f"Episode {i:<8} | score {score:<8.2f} | avg_score {avg_score:<8.2f} | time_steps {n_steps:<8} | learning_steps {learn_iters:<8} | time (min) {delta_time:<8.1f} | best average {best_score:.2f}")

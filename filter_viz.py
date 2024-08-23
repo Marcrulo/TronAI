@@ -37,7 +37,7 @@ player1.load_models()
 
 from torchvision import utils
 model = player1.actor
-kernel = model.actor_seq[0].weight.data.cpu().numpy()
+kernel = model.actor_seq[2].weight.data.cpu().numpy()
 print(kernel.shape)
 
 filter_img = utils.make_grid(torch.tensor(kernel), nrow=4, normalize=True)

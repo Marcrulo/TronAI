@@ -29,12 +29,12 @@ class PolicyNetwork(nn.Module):
 
         if self.cnn:
             self.actor_seq = nn.Sequential(
-                nn.Conv2d(in_channels=1, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=scale*3, stride=1, padding=1),
+                nn.Conv2d(in_channels=1, out_channels=16, kernel_size=scale*3, stride=1, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(in_channels=16, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
                 nn.Flatten(),
-                nn.Linear(16384,self.hidden_units),
-                nn.ReLU(),
+                nn.Linear(8192,self.hidden_units),
+                nn.Tanh(),
                 nn.Linear(self.hidden_units, self.num_actions),
                 nn.Softmax(dim=-1)
             )
@@ -43,7 +43,7 @@ class PolicyNetwork(nn.Module):
                 nn.Linear(*self.num_observations, self.hidden_units),
                 nn.ReLU(),
                 nn.Linear(self.hidden_units, self.hidden_units),
-                nn.Dropout(0.5),
+                # nn.Dropout(0.2),
                 nn.ReLU(),
                 nn.Linear(self.hidden_units, self.num_actions),
                 nn.Softmax(dim=-1)
@@ -88,13 +88,13 @@ class ValueNetwork(nn.Module):
 
         if self.cnn:
             self.critic_seq = nn.Sequential(
-                nn.Conv2d(in_channels=1, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
-                nn.ReLU(),
-                nn.Conv2d(in_channels=32, out_channels=64, kernel_size=scale*3, stride=1, padding=1),
+                nn.Conv2d(in_channels=1, out_channels=16, kernel_size=scale*3, stride=1, padding=1),
+                nn.Tanh(),
+                nn.Conv2d(in_channels=16, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
                 nn.Flatten(),
-                nn.Linear(16384,self.hidden_units),
-                nn.Dropout(0.5),
-                nn.ReLU(),
+                nn.Linear(8192,self.hidden_units),
+                # nn.Dropout(0.2),
+                nn.Tanh(),
                 nn.Linear(self.hidden_units, 1),
             )
         else:        
