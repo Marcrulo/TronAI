@@ -1,0 +1,11 @@
+* inspect observation images
+* change activation functions
+* larger filters (3x3 -> 5x5)
+
+"Overfit"
+* remove player 2 (for testing)
+* fixed starting position (for testing)
+
+Prevent "same-action" models
+* weight/bias initialization
+* reset checkpoint 

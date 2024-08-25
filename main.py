@@ -65,7 +65,6 @@ for i in range(n_games):
             observation_, reward, done, _ , info = env.step(action1, take_bot_action=action2)
         else:
             observation_, reward, done, _ , info = env.step(action1)  
-
         game_length += 1
         n_steps += 1
         score += reward

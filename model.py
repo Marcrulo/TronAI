@@ -33,7 +33,7 @@ class PolicyNetwork(nn.Module):
                 nn.Tanh(),
                 nn.Conv2d(in_channels=16, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
                 nn.Flatten(),
-                nn.Linear(8192,self.hidden_units),
+                nn.Linear(7200,self.hidden_units),
                 nn.Tanh(),
                 nn.Linear(self.hidden_units, self.num_actions),
                 nn.Softmax(dim=-1)
@@ -54,11 +54,10 @@ class PolicyNetwork(nn.Module):
         self.to(self.device)
         
     def forward(self, x):
-        x = np.expand_dims(x, axis=1)
-        x /= 2
-        x = torch.tensor(x).to(self.device)
+        x = x.unsqueeze(1)
         x = self.actor_seq(x)
         x = Categorical(x)
+        
         return x
     
     def save_checkpoint(self):
@@ -84,7 +83,7 @@ class ValueNetwork(nn.Module):
         self.learning_rate = configs["model"]["learning_rate"]
         
         # game
-        scale = 1#configs['game']['scale']
+        scale = 1 #configs['game']['scale']
 
         if self.cnn:
             self.critic_seq = nn.Sequential(
@@ -92,7 +91,7 @@ class ValueNetwork(nn.Module):
                 nn.Tanh(),
                 nn.Conv2d(in_channels=16, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
                 nn.Flatten(),
-                nn.Linear(8192,self.hidden_units),
+                nn.Linear(7200,self.hidden_units),
                 # nn.Dropout(0.2),
                 nn.Tanh(),
                 nn.Linear(self.hidden_units, 1),
@@ -111,9 +110,7 @@ class ValueNetwork(nn.Module):
         self.to(self.device)
         
     def forward(self, x):
-        x = np.expand_dims(x, axis=1)
-        x /= 2
-        x = torch.tensor(x).to(self.device)
+        x = x.unsqueeze(1)
         x = self.critic_seq(x)
         
         return x

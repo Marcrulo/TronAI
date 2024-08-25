@@ -1,3 +1,0 @@
-CNN
- - eval vs. train (choose_action vs. learn)
-Display on webpage

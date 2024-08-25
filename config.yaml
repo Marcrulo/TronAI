@@ -2,8 +2,8 @@
 game:
 
   scale:  20
-  width:  320
-  height: 320
+  width:  300
+  height: 300
   fps: 10
 
 #############################
@@ -13,7 +13,7 @@ model:
   gamma: 0.99
   epsilon: 0.2
 
-  learning_rate: 0.0005
+  learning_rate: 0.0003
   hidden_units: 256
 
   trajectory_length: 4

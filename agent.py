@@ -38,11 +38,11 @@ class Agent:
 
     def choose_action(self, observation):
         state = torch.tensor(observation, dtype=torch.float32).to(self.actor.device).unsqueeze(0)
-
+        
         dist = self.actor(state)
         value = self.critic(state)
         action = dist.sample()
-        
+
         probs = torch.squeeze(dist.log_prob(action)).item()
         action = torch.squeeze(action).item()
         value = torch.squeeze(value).item()
