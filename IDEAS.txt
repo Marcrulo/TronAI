@@ -1,11 +1,17 @@
 * inspect observation images
 * change activation functions
 * larger filters (3x3 -> 5x5)
+* change values + add border
 
 "Overfit"
 * remove player 2 (for testing)
 * fixed starting position (for testing)
+* fixed direction (for testing)
 
 Prevent "same-action" models
 * weight/bias initialization
 * reset checkpoint 
+
+Increase code quality
+* add comments
+* only enable cnn

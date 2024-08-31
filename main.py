@@ -25,6 +25,7 @@ _ = env.reset()
 # Create the agents
 if cnn:
     obs_space = env.observation.shape
+    obs_space = (obs_space[0]-1, obs_space[1]-1)
 else:
     obs_space = env.observation_space.shape
     
@@ -75,14 +76,11 @@ for i in range(n_games):
             learn_iters += 1
         observation = observation_[0]
         observation2 = observation_[1]
-        
-        # fig, ax = plt.subplots(1, 2)
-        # a = ax[0].imshow(observation)
-        # b = ax[1].imshow(observation2)
-        # fig.colorbar(a, ax=ax[0])
-        # fig.colorbar(b, ax=ax[1])
-        # plt.show()
 
+        plt.imshow(observation)
+        plt.show()
+        
+        
     score_history.append(score)
     delta_time = (time.time()-start)/60
     w.add_scalar("score", score, i)

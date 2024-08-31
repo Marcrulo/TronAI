@@ -34,28 +34,28 @@ class Player:
                 return
                 
         # collision with border
-        if self.newx < 0:
+        if self.newx < 1:
             self.newx = self.x
             self.kill()
-            # print("collision with left border")
+            print("collision with left border")
             return
         
-        elif self.newx > width-3*scale:
+        elif self.newx > width-3*scale-1:
             self.newx = self.x
             self.kill()
-            # print("collision with right border") 
+            print("collision with right border") 
             return
            
-        elif self.newy < 0:
+        elif self.newy < 1:
             self.newy = self.y
             self.kill()
-            # print("collision with top border") 
+            print("collision with top border") 
             return
         
-        elif self.newy > height-3*scale:
+        elif self.newy > height-3*scale-1:
             self.newy = self.y
             self.kill()
-            # print("collision with bottom border") 
+            print("collision with bottom border") 
             return
         
         # collision with other player

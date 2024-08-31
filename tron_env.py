@@ -7,6 +7,7 @@ import numpy as np
 from player import Player
 import yaml
 from matplotlib import pyplot as plt
+from PIL import Image, ImageOps
 
 configs = yaml.safe_load(open("config.yaml"))
 
@@ -28,7 +29,7 @@ class TronEnv(gym.Env):
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-1, high=1, shape=(obs_size,), dtype=int)
         self.directions = ['right', 'left', 'up', 'down']
-        self.player_ids = [2,-2]
+        self.player_ids = [2,-2] 
 
         if self.render_mode == 'human':
             pygame.init()
@@ -39,12 +40,11 @@ class TronEnv(gym.Env):
     def obs_to_img(self, obs, p1, p2):
         img1 = obs.copy()
         img1[p1.y//SCALE, p1.x//SCALE] = self.player_ids[0]
-        img1[p2.y//SCALE, p2.x//SCALE] = self.player_ids[1]
-        # img = np.expand_dims(img, axis=0)
+        # img1[p2.y//SCALE, p2.x//SCALE] = self.player_ids[1]
 
         img2 = obs.copy()
         img2[p1.y//SCALE, p1.x//SCALE] = self.player_ids[1]
-        img2[p2.y//SCALE, p2.x//SCALE] = self.player_ids[0]
+        # img2[p2.y//SCALE, p2.x//SCALE] = self.player_ids[0]
 
         return img1, img2
         
@@ -76,7 +76,7 @@ class TronEnv(gym.Env):
             self.p2.dir = 'left'
         
         
-        self.observation = -np.ones((ROW, COLUMN))
+        # self.observation = -np.ones((ROW, COLUMN))
         self.head1 = -np.ones(ROW+COLUMN)
         self.head2 = -np.ones(ROW+COLUMN)
         
@@ -87,7 +87,8 @@ class TronEnv(gym.Env):
             heads[i][ROW+player.x//SCALE] = 1
             for t in player.trail:
                 self.observation[t[1]//SCALE, t[0]//SCALE] = 0 #self.player_ids[i]
-                
+            break
+         
         if self.p1.alive and not self.p2.alive:
             self.reward = 100
         elif not self.p1.alive:
@@ -117,23 +118,25 @@ class TronEnv(gym.Env):
         self.reward = 0
         
         # random start position and direction
-        self.p1 = Player(start_pos=(np.random.randint(2,ROW-2)*SCALE, 
-                                    np.random.randint(2,COLUMN-2)*SCALE),
+        self.p1 = Player(start_pos=(np.random.randint(3,ROW-3)*SCALE, 
+                                    np.random.randint(3,COLUMN-3)*SCALE),
                          start_dir=random.choice(self.directions))
-        self.p2 = Player(start_pos=(np.random.randint(2,ROW-2)*SCALE, 
-                                    np.random.randint(2,COLUMN-2)*SCALE),
+        self.p2 = Player(start_pos=(100000+np.random.randint(3,ROW-3)*SCALE, 
+                                    np.random.randint(3,COLUMN-3)*SCALE),
                          start_dir=random.choice(self.directions))
         self.players = [self.p1, self.p2]
         
         self.observation = -np.ones((ROW, COLUMN))
-        self.head1 = -np.ones(ROW+COLUMN)
-        self.head2 = -np.ones(ROW+COLUMN)
+        # self.head1 = -np.ones(ROW+COLUMN)
+        # self.head2 = -np.ones(ROW+COLUMN)
         
-        self.head1[self.p1.y//SCALE] = 1
-        self.head1[ROW+self.p1.x//SCALE] = 1
-        self.head2[self.p2.y//SCALE] = 1
-        self.head2[ROW+self.p2.x//SCALE] = 1
+        # self.head1[self.p1.y//SCALE] = 1
+        # self.head1[ROW+self.p1.x//SCALE] = 1
+        # self.head2[self.p2.y//SCALE] = 1
+        # self.head2[ROW+self.p2.x//SCALE] = 1
         
+        # add a padding to the observation image
+        self.observation = np.array(ImageOps.expand(Image.fromarray(self.observation), border=1, fill=1))
         
         if self.cnn:
             self.observation, _ = self.obs_to_img(self.observation, self.p1, self.p2)

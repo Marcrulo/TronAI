@@ -14,12 +14,12 @@ model:
   epsilon: 0.2
 
   learning_rate: 0.0003
-  hidden_units: 256
+  hidden_units: 512
 
   trajectory_length: 4
-  batch_size: 4
+  batch_size: 3
 
-  n_epochs: 3
+  n_epochs: 2
 #############################
 training:
   episodes: 10000000

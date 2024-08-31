@@ -2,6 +2,7 @@ from tron_env import TronEnv
 from agent import Agent
 import gym
 import yaml
+from matplotlib import pyplot as plt
 
 configs = yaml.safe_load(open("config.yaml"))
 cnn = configs["env"]["cnn"]
@@ -16,6 +17,7 @@ _ = env.reset()
 
 if cnn:
     obs_space = env.observation.shape
+    obs_space = (obs_space[0]-1, obs_space[1]-1)
 else:
     obs_space = env.observation_space.shape
 
@@ -44,6 +46,6 @@ for i in range(configs["eval"]["episodes"]):
 
         observation = observation_[0]
         observation2 = observation_[1]
-
+        
         score += reward
     print(f"Episode {i}, score {score}")

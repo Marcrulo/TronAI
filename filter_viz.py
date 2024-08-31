@@ -36,9 +36,9 @@ player2 = Agent(num_actions=env.action_space.n,
 player1.load_models()
 
 from torchvision import utils
-model = player1.actor
-kernel = model.actor_seq[2].weight.data.cpu().numpy()
-print(kernel.shape)
+model = player1.critic
+kernel = model.critic_seq[0].weight.data.cpu().numpy()
+print(kernel)
 
 filter_img = utils.make_grid(torch.tensor(kernel), nrow=4, normalize=True)
 plt.imshow(filter_img.permute(1, 2, 0))
