@@ -9,7 +9,7 @@
 * fixed direction (for testing)
 
 Prevent "same-action" models
-* weight/bias initialization
+* (!) weight/bias initialization
 * reset checkpoint 
 
 Increase code quality

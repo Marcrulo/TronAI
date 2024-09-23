@@ -57,6 +57,7 @@ class PolicyNetwork(nn.Module):
     def forward(self, x):
         x = x.unsqueeze(1)
         x = self.actor_seq(x)
+        # print(np.round(x.cpu().detach().numpy(),2))        
         x = Categorical(x)
         return x
     
