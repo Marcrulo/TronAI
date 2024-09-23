@@ -10,16 +10,16 @@ game:
 model:
 
   lambda: 0.95
-  gamma: 0.99
+  gamma: 0.95 #0.99
   epsilon: 0.2
 
   learning_rate: 0.0003
-  hidden_units: 512
+  hidden_units: 256
 
-  trajectory_length: 4
-  batch_size: 3
+  trajectory_length: 3
+  batch_size: 5
 
-  n_epochs: 2
+  n_epochs: 4
 #############################
 training:
   episodes: 10000000
@@ -29,6 +29,6 @@ eval:
 #############################
 env:
   name: "tron" # tron, ...
-  render_mode:  # "human" , <nothing> 
+  render_mode: # "human" , <nothing> 
   cnn: True
 #############################

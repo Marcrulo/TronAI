@@ -29,11 +29,11 @@ class PolicyNetwork(nn.Module):
 
         if self.cnn:
             self.actor_seq = nn.Sequential(
-                nn.Conv2d(in_channels=1, out_channels=256, kernel_size=scale*5, stride=1, padding=0),
+                nn.Conv2d(in_channels=1, out_channels=64, kernel_size=scale*3, stride=1, padding=0),
                 nn.Tanh(),
                 # nn.Conv2d(in_channels=16, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
                 nn.Flatten(),
-                nn.Linear(43264,self.hidden_units),
+                nn.Linear(14400,self.hidden_units),
                 nn.Tanh(),
                 nn.Linear(self.hidden_units, self.num_actions),
                 nn.Softmax(dim=-1)
@@ -62,8 +62,8 @@ class PolicyNetwork(nn.Module):
     
     def _initialize_weights(self):
         final_linear_layer = self.actor_seq[-2]
-        nn.init.normal_(final_linear_layer.weight, mean=0, std=0.01)
-        nn.init.constant_(final_linear_layer.bias, 0)
+        # nn.init.normal_(final_linear_layer.weight, mean=0, std=1)
+        # nn.init.constant_(final_linear_layer.bias, 0)
     
     def save_checkpoint(self):
         torch.save(self.state_dict(), self.checkpoint_file)
@@ -92,11 +92,11 @@ class ValueNetwork(nn.Module):
 
         if self.cnn:
             self.critic_seq = nn.Sequential(
-                nn.Conv2d(in_channels=1, out_channels=256, kernel_size=scale*5, stride=1, padding=0),
+                nn.Conv2d(in_channels=1, out_channels=64, kernel_size=scale*3, stride=1, padding=0),
                 nn.Tanh(),
                 # nn.Conv2d(in_channels=16, out_channels=32, kernel_size=scale*3, stride=1, padding=1),
                 nn.Flatten(),
-                nn.Linear(43264,self.hidden_units),
+                nn.Linear(14400,self.hidden_units),
                 # nn.Dropout(0.2),
                 nn.Tanh(),
                 nn.Linear(self.hidden_units, 1),

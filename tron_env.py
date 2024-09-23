@@ -33,7 +33,7 @@ class TronEnv(gym.Env):
 
         if self.render_mode == 'human':
             pygame.init()
-            self.display = pygame.display.set_mode((WIDTH, HEIGHT))
+            self.display = pygame.display.set_mode((WIDTH+2*SCALE, HEIGHT+2*SCALE))
             pygame.display.set_caption('Tron')
             self.clock = pygame.time.Clock()
 
@@ -77,12 +77,12 @@ class TronEnv(gym.Env):
         
         
         # self.observation = -np.ones((ROW, COLUMN))
-        self.head1 = -np.ones(ROW+COLUMN)
-        self.head2 = -np.ones(ROW+COLUMN)
+        self.head1 = -np.ones(ROW+COLUMN+2)
+        self.head2 = -np.ones(ROW+COLUMN+2)
         
         heads = [self.head1, self.head2]
         for i, player in enumerate(self.players):
-            player.update(scale=SCALE, width=WIDTH, height=HEIGHT, p_opponent=self.players[not i])
+            player.update(p_opponent=self.players[not i])
             heads[i][player.y//SCALE] = 1
             heads[i][ROW+player.x//SCALE] = 1
             for t in player.trail:
@@ -120,10 +120,14 @@ class TronEnv(gym.Env):
         # random start position and direction
         self.p1 = Player(start_pos=(np.random.randint(3,ROW-3)*SCALE, 
                                     np.random.randint(3,COLUMN-3)*SCALE),
-                         start_dir=random.choice(self.directions))
+                         start_dir=random.choice(self.directions),
+                         scale=SCALE, width=WIDTH, height=HEIGHT)
+        # self.p1 = Player(start_pos=((8*SCALE),(8*SCALE)),
+        #                  start_dir=1)
         self.p2 = Player(start_pos=(100000+np.random.randint(3,ROW-3)*SCALE, 
                                     np.random.randint(3,COLUMN-3)*SCALE),
-                         start_dir=random.choice(self.directions))
+                         start_dir=random.choice(self.directions),
+                         scale=SCALE, width=WIDTH, height=HEIGHT)
         self.players = [self.p1, self.p2]
         
         self.observation = -np.ones((ROW, COLUMN))
@@ -134,9 +138,9 @@ class TronEnv(gym.Env):
         # self.head1[ROW+self.p1.x//SCALE] = 1
         # self.head2[self.p2.y//SCALE] = 1
         # self.head2[ROW+self.p2.x//SCALE] = 1
-        
+
         # add a padding to the observation image
-        self.observation = np.array(ImageOps.expand(Image.fromarray(self.observation), border=1, fill=1))
+        self.observation = np.array(ImageOps.expand(Image.fromarray(self.observation), border=1, fill=0))
         
         if self.cnn:
             self.observation, _ = self.obs_to_img(self.observation, self.p1, self.p2)
@@ -155,16 +159,16 @@ class TronEnv(gym.Env):
         self.display.fill((67,70,75))
         
         # Borders
-        pygame.draw.rect(self.display, 'WHITE', (SCALE, SCALE, WIDTH-2*SCALE, 1))        # TOP
-        pygame.draw.rect(self.display, 'WHITE', (SCALE, HEIGHT-SCALE, WIDTH-2*SCALE, 1)) # BOTTOM 
-        pygame.draw.rect(self.display, 'WHITE', (SCALE, SCALE, 1, HEIGHT-2*SCALE))       # LEFT
-        pygame.draw.rect(self.display, 'WHITE', (WIDTH-SCALE, SCALE, 1, HEIGHT-2*SCALE)) # RIGHT
+        pygame.draw.rect(self.display, 'WHITE', (SCALE, SCALE, WIDTH, 1))        # TOP
+        pygame.draw.rect(self.display, 'WHITE', (SCALE, HEIGHT+SCALE, WIDTH, 1)) # BOTTOM 
+        pygame.draw.rect(self.display, 'WHITE', (SCALE, SCALE, 1, HEIGHT))       # LEFT
+        pygame.draw.rect(self.display, 'WHITE', (WIDTH+SCALE, SCALE, 1, HEIGHT)) # RIGHT
         
         # Players
         for i, player in enumerate(self.players):
             for t in player.trail:
-                pygame.draw.rect(self.display, (0, (not i)*150,i*150), (t[0]+SCALE, t[1]+SCALE, SCALE, SCALE))
-            pygame.draw.rect(self.display, (0, (not i)*255,i*255), (player.x+SCALE, player.y+SCALE, SCALE, SCALE))
+                pygame.draw.rect(self.display, (0, (not i)*150,i*150), (t[0], t[1], SCALE, SCALE))
+            pygame.draw.rect(self.display, (0, (not i)*255,i*255), (player.x, player.y, SCALE, SCALE))
         
         pygame.display.update()
         self.clock.tick(FPS)

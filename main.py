@@ -25,10 +25,10 @@ _ = env.reset()
 # Create the agents
 if cnn:
     obs_space = env.observation.shape
-    obs_space = (obs_space[0]-1, obs_space[1]-1)
+    obs_space = (obs_space[0]-2, obs_space[1]-2)
 else:
     obs_space = env.observation_space.shape
-    
+print(obs_space)
 player1 = Agent(num_actions=env.action_space.n, 
                 num_observations=obs_space,
                 cnn=cnn)
@@ -77,14 +77,16 @@ for i in range(n_games):
         observation = observation_[0]
         observation2 = observation_[1]
 
-        plt.imshow(observation)
-        plt.show()
-        
-        
+        # if not done:
+        #     plt.imshow(observation)
+        #     plt.colorbar()
+        #     plt.show()
+
     score_history.append(score)
     delta_time = (time.time()-start)/60
     w.add_scalar("score", score, i)
     w.add_scalar("time", delta_time, i)
+    
     avg_score = np.mean(score_history[-30:])
         
     if avg_score > best_score and learn_iters > 30:

@@ -17,7 +17,7 @@ _ = env.reset()
 
 if cnn:
     obs_space = env.observation.shape
-    obs_space = (obs_space[0]-1, obs_space[1]-1)
+    obs_space = (obs_space[0]-2, obs_space[1]-2)
 else:
     obs_space = env.observation_space.shape
 
