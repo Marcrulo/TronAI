@@ -13,10 +13,10 @@ model:
   gamma: 0.99 #0.99
   epsilon: 0.2
 
-  learning_rate: 0.0000003
+  learning_rate: 0.0000001
   hidden_units: 256
 
-  trajectory_length: 4
+  trajectory_length: 6
   batch_size: 5
 
   n_epochs: 4
