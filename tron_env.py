@@ -16,20 +16,18 @@ SCALE = configs['game']['scale']
 ROW, COLUMN = WIDTH//SCALE, HEIGHT//SCALE
 FPS = configs['game']['fps']
 
-cnn = configs["env"]["cnn"]
 
 from model import PolicyNetwork
 obs_size = ROW*COLUMN + 2*ROW + 2*COLUMN
-Model = PolicyNetwork((obs_size,), 4, cnn=True)
+Model = PolicyNetwork((obs_size,), 4)
 
 class TronEnv(gym.Env):
-    def __init__(self, render_mode=None, cnn=False):
+    def __init__(self, render_mode=None):
         self.render_mode = render_mode
-        self.cnn = cnn
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-1, high=1, shape=(obs_size,), dtype=int)
         self.directions = ['right', 'left', 'up', 'down']
-        self.player_ids = [2,-2] 
+        self.player_ids = [0.5, -0.5] #[2,-2] 
 
         if self.render_mode == 'human':
             pygame.init()
@@ -101,11 +99,7 @@ class TronEnv(gym.Env):
         else:
             self.done = True
 
-        if self.cnn:
-            self.observation, self.observation2 = self.obs_to_img(self.observation, self.p1, self.p2)
-        else:
-            self.observation = np.concatenate((self.observation.flatten(), self.head1, self.head2), axis=0)
-            self.observation2 = None
+        self.observation, self.observation2 = self.obs_to_img(self.observation, self.p1, self.p2)
         
         if self.render_mode == "human":
             self.render()
@@ -118,12 +112,13 @@ class TronEnv(gym.Env):
         self.reward = 0
         
         # random start position and direction
-        self.p1 = Player(start_pos=(np.random.randint(3,ROW-3)*SCALE, 
-                                    np.random.randint(3,COLUMN-3)*SCALE),
-                         start_dir=random.choice(self.directions),
+        # self.p1 = Player(start_pos=(np.random.randint(3,ROW-3)*SCALE, 
+        #                             np.random.randint(3,COLUMN-3)*SCALE),
+        #                  start_dir=random.choice(self.directions),
+        #                  scale=SCALE, width=WIDTH, height=HEIGHT)
+        self.p1 = Player(start_pos=((8*SCALE),(8*SCALE)),
+                         start_dir=1, 
                          scale=SCALE, width=WIDTH, height=HEIGHT)
-        # self.p1 = Player(start_pos=((8*SCALE),(8*SCALE)),
-        #                  start_dir=1)
         self.p2 = Player(start_pos=(100000+np.random.randint(3,ROW-3)*SCALE, 
                                     np.random.randint(3,COLUMN-3)*SCALE),
                          start_dir=random.choice(self.directions),
@@ -141,11 +136,8 @@ class TronEnv(gym.Env):
 
         # add a padding to the observation image
         self.observation = np.array(ImageOps.expand(Image.fromarray(self.observation), border=1, fill=0))
-        
-        if self.cnn:
-            self.observation, _ = self.obs_to_img(self.observation, self.p1, self.p2)
-        else:
-            self.observation = np.concatenate((self.observation.flatten(), self.head1, self.head2), axis=0)
+
+        self.observation, _ = self.obs_to_img(self.observation, self.p1, self.p2)
 
         if self.render_mode == 'human':
             self.clock = pygame.time.Clock()

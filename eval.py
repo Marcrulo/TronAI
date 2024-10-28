@@ -5,28 +5,23 @@ import yaml
 from matplotlib import pyplot as plt
 
 configs = yaml.safe_load(open("config.yaml"))
-cnn = configs["env"]["cnn"]
 
 if configs["env"]["name"] == "tron":
-    env = TronEnv(render_mode="human", cnn=cnn)
+    env = TronEnv(render_mode="human")
 else:
-    env = gym.make(configs["env"]["name"], render_mode="human", cnn=cnn)
+    env = gym.make(configs["env"]["name"], render_mode="human")
 _ = env.reset()
 
 
 
-if cnn:
-    obs_space = env.observation.shape
-    obs_space = (obs_space[0]-2, obs_space[1]-2)
-else:
-    obs_space = env.observation_space.shape
+
+obs_space = env.observation.shape
+obs_space = (obs_space[0]-2, obs_space[1]-2)
 
 player1 = Agent(num_actions=env.action_space.n, 
-                num_observations=obs_space,
-                cnn=cnn)
+                num_observations=obs_space)
 player2 = Agent(num_actions=env.action_space.n,
-                num_observations=obs_space,
-                cnn=cnn)
+                num_observations=obs_space)
 player1.load_models()
 player2.load_model_opponent(player1)
 

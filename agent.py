@@ -8,9 +8,9 @@ configs = yaml.safe_load(open("config.yaml"))
 
 
 class Agent:
-    def __init__(self, num_actions, num_observations, cnn=False):
-        self.actor  = PolicyNetwork(num_observations, num_actions, cnn)
-        self.critic = ValueNetwork(num_observations, cnn)
+    def __init__(self, num_actions, num_observations):
+        self.actor  = PolicyNetwork(num_observations, num_actions)
+        self.critic = ValueNetwork(num_observations)
         self.memory = PPOMemory(batch_size=configs["model"]["batch_size"])
     
         self.n_epochs = configs["model"]["n_epochs"] # num. epochs per set of mini-batches
