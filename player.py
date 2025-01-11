@@ -34,36 +34,36 @@ class Player:
         for t in self.trail:
             if self.x == t[0] and self.y == t[1]:
                 self.kill()
-                print("COLLISION WITH SELF")
+                # print("COLLISION WITH SELF")
                 return
                 
         # collision with border
         if self.newx < self.scale:
             self.newx = self.x
             self.kill()
-            print("collision with left border")
+            # print("collision with left border")
             return
         
         elif self.newx > self.width:
             self.newx = self.x
             self.kill()
-            print("collision with right border") 
+            # print("collision with right border") 
             return
            
         elif self.newy < self.scale:
             self.newy = self.y
             self.kill()
-            print("collision with top border") 
+            # print("collision with top border") 
             return
         
         elif self.newy > self.height:
             self.newy = self.y
             self.kill()
-            print("collision with bottom border") 
+            # print("collision with bottom border") 
             return
                 
         # add to trail
-        self.trail.append((self.x, self.y))
+        self.trail.append((self.x-self.scale, self.y-self.scale))
         
         # update position
         self.x, self.y = self.newx, self.newy

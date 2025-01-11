@@ -1,8 +1,10 @@
 import random
 import time
 import pygame
-import gymnasium as gym
-from gymnasium import spaces # gym
+# import gymnasium as gym
+# from gymnasium import spaces # gym
+import gym
+from gym import spaces
 import numpy as np
 from player import Player
 import yaml
@@ -16,7 +18,7 @@ SCALE = configs['game']['scale']
 ROW, COLUMN = WIDTH//SCALE, HEIGHT//SCALE
 FPS = configs['game']['fps']
 
-obs_size =  ROW*COLUMN + 2*ROW + 2*COLUMN
+obs_size =  ROW*COLUMN #ROW*COLUMN + 2*ROW + 2*COLUMN
 
 class TronEnv(gym.Env):
     def __init__(self, render_mode=None):
@@ -25,16 +27,13 @@ class TronEnv(gym.Env):
         self.observation_space = spaces.Box(low=-1, high=1, shape=(obs_size,), dtype=int)
         self.directions = ['right', 'left', 'up', 'down']
 
-        if self.render_mode == 'human':
-            pygame.init()
-            self.display = pygame.display.set_mode((WIDTH+2*SCALE, HEIGHT+2*SCALE))
-            pygame.display.set_caption('Tron')
-            self.clock = pygame.time.Clock()
+        self.is_rendered_yet = False
 
     def obs_to_img(self, obs, p1):
-        img1 = obs.copy()
-        img1[p1.y//SCALE, p1.x//SCALE] = 1
-        return img1
+        # img1 = obs.copy()
+        # img1[p1.y//SCALE, p1.x//SCALE] = 1
+        # return img1
+        return obs
     
     def step(self, action):
         
@@ -49,10 +48,9 @@ class TronEnv(gym.Env):
         elif action == 3 and self.p1.dir != 'right':
             self.p1.dir = 'left'
         
-        # self.observation = -np.ones((ROW, COLUMN))
-        self.head = -np.ones(ROW+COLUMN+2)
-        
         self.p1.update()
+
+        self.head = -np.ones(ROW+COLUMN+2)
         self.head[self.p1.y//SCALE] = 1
         self.head[ROW+self.p1.x//SCALE] = 1
         for t in self.p1.trail:
@@ -73,7 +71,7 @@ class TronEnv(gym.Env):
         if self.render_mode == "human":
             self.render()
         
-        return self.observation, 1, self.done, {}, {}
+        return self.observation.flatten(), 1, self.done, {}, {}
             
     def reset(self, seed=None):
         self.seed = 0
@@ -88,11 +86,11 @@ class TronEnv(gym.Env):
         #                  start_dir=1, 
         #                  scale=SCALE, width=WIDTH, height=HEIGHT)
         
-        self.observation = -np.ones((ROW, COLUMN))
+        self.observation = -np.ones((ROW, COLUMN)).astype(int)
 
         # add a padding to the observation image
-        self.observation = np.array(ImageOps.expand(Image.fromarray(self.observation), border=1, fill=0))
-        self.observation = self.obs_to_img(self.observation, self.p1)
+        # self.observation = np.array(ImageOps.expand(Image.fromarray(self.observation), border=1, fill=0))
+        # self.observation = self.obs_to_img(self.observation, self.p1)
 
         if self.render_mode == 'human':
             self.clock = pygame.time.Clock()
@@ -100,7 +98,18 @@ class TronEnv(gym.Env):
         
         return self.observation.flatten(), {}
         
-    def render(self):
+    def render(self, render_mode=None):
+
+        if render_mode != 'human':
+            return
+
+        if not self.is_rendered_yet:
+            pygame.init()
+            self.display = pygame.display.set_mode((WIDTH+2*SCALE, HEIGHT+2*SCALE))
+            pygame.display.set_caption('Tron')
+            self.clock = pygame.time.Clock()
+            self.is_rendered_yet = True
+
         # Background
         self.display.fill((67,70,75))
         
