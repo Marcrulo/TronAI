@@ -1,8 +1,8 @@
 import random
 import time
 import pygame
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces # gym
 import numpy as np
 from player import Player
 import yaml
@@ -16,10 +16,7 @@ SCALE = configs['game']['scale']
 ROW, COLUMN = WIDTH//SCALE, HEIGHT//SCALE
 FPS = configs['game']['fps']
 
-
-from model import PolicyNetwork
-obs_size = ROW*COLUMN + 2*ROW + 2*COLUMN
-Model = PolicyNetwork((obs_size,), 4)
+obs_size =  ROW*COLUMN + 2*ROW + 2*COLUMN
 
 class TronEnv(gym.Env):
     def __init__(self, render_mode=None):
@@ -27,7 +24,6 @@ class TronEnv(gym.Env):
         self.action_space = spaces.Discrete(4)
         self.observation_space = spaces.Box(low=-1, high=1, shape=(obs_size,), dtype=int)
         self.directions = ['right', 'left', 'up', 'down']
-        self.player_ids = [0.5, -0.5] #[2,-2] 
 
         if self.render_mode == 'human':
             pygame.init()
@@ -35,19 +31,15 @@ class TronEnv(gym.Env):
             pygame.display.set_caption('Tron')
             self.clock = pygame.time.Clock()
 
-    def obs_to_img(self, obs, p1, p2):
+    def obs_to_img(self, obs, p1):
         img1 = obs.copy()
-        img1[p1.y//SCALE, p1.x//SCALE] = self.player_ids[0]
-        # img1[p2.y//SCALE, p2.x//SCALE] = self.player_ids[1]
-
-        img2 = obs.copy()
-        img2[p1.y//SCALE, p1.x//SCALE] = self.player_ids[1]
-        # img2[p2.y//SCALE, p2.x//SCALE] = self.player_ids[0]
-
-        return img1, img2
+        img1[p1.y//SCALE, p1.x//SCALE] = 1
+        return img1
+    
+    def step(self, action):
         
-    def step(self, action, take_bot_action = False):
-                
+        self.observation = self.observation.reshape(ROW, COLUMN)
+
         if action == 0 and self.p1.dir != 'down':
             self.p1.dir = 'up'
         elif action == 1 and self.p1.dir != 'up':
@@ -56,95 +48,57 @@ class TronEnv(gym.Env):
             self.p1.dir = 'right'
         elif action == 3 and self.p1.dir != 'right':
             self.p1.dir = 'left'
-
-
-        if take_bot_action:
-            bot_action = take_bot_action
-        else:
-            bot_action = random.randint(0,3)
-        
-
-        if bot_action == 0 and self.p2.dir != 'down':
-            self.p2.dir = 'up'
-        elif bot_action == 1 and self.p2.dir != 'up':
-            self.p2.dir = 'down'
-        elif bot_action == 2 and self.p2.dir != 'left':
-            self.p2.dir = 'right'
-        elif bot_action == 3 and self.p2.dir != 'right':
-            self.p2.dir = 'left'
-        
         
         # self.observation = -np.ones((ROW, COLUMN))
-        self.head1 = -np.ones(ROW+COLUMN+2)
-        self.head2 = -np.ones(ROW+COLUMN+2)
+        self.head = -np.ones(ROW+COLUMN+2)
         
-        heads = [self.head1, self.head2]
-        for i, player in enumerate(self.players):
-            player.update(p_opponent=self.players[not i])
-            heads[i][player.y//SCALE] = 1
-            heads[i][ROW+player.x//SCALE] = 1
-            for t in player.trail:
-                self.observation[t[1]//SCALE, t[0]//SCALE] = 0 #self.player_ids[i]
-            break
+        self.p1.update()
+        self.head[self.p1.y//SCALE] = 1
+        self.head[ROW+self.p1.x//SCALE] = 1
+        for t in self.p1.trail:
+            self.observation[t[1]//SCALE, t[0]//SCALE] = 0 #self.player_ids[i]
          
-        if self.p1.alive and not self.p2.alive:
-            self.reward = 100
+        if self.p1.alive:
+            self.reward = 1
         elif not self.p1.alive:
-            self.reward = -100
-        else:
-            self.reward = -1
+            self.reward = -10000
             
-        if self.p1.alive and self.p2.alive:
+        if self.p1.alive:
             self.done = False
         else:
             self.done = True
 
-        self.observation, self.observation2 = self.obs_to_img(self.observation, self.p1, self.p2)
+        self.observation = self.obs_to_img(self.observation, self.p1)
         
         if self.render_mode == "human":
             self.render()
         
+        return self.observation, 1, self.done, {}, {}
             
-        # return self.observation, self.reward, self.done, {}, {}
-        return (self.observation, self.observation2), 1, self.done, {}, {}
-            
-    def reset(self):
+    def reset(self, seed=None):
+        self.seed = 0
         self.reward = 0
         
         # random start position and direction
-        # self.p1 = Player(start_pos=(np.random.randint(3,ROW-3)*SCALE, 
-        #                             np.random.randint(3,COLUMN-3)*SCALE),
-        #                  start_dir=random.choice(self.directions),
-        #                  scale=SCALE, width=WIDTH, height=HEIGHT)
-        self.p1 = Player(start_pos=((8*SCALE),(8*SCALE)),
-                         start_dir=1, 
-                         scale=SCALE, width=WIDTH, height=HEIGHT)
-        self.p2 = Player(start_pos=(100000+np.random.randint(3,ROW-3)*SCALE, 
+        self.p1 = Player(start_pos=(np.random.randint(3,ROW-3)*SCALE, 
                                     np.random.randint(3,COLUMN-3)*SCALE),
                          start_dir=random.choice(self.directions),
                          scale=SCALE, width=WIDTH, height=HEIGHT)
-        self.players = [self.p1, self.p2]
+        # self.p1 = Player(start_pos=((8*SCALE),(8*SCALE)),
+        #                  start_dir=1, 
+        #                  scale=SCALE, width=WIDTH, height=HEIGHT)
         
         self.observation = -np.ones((ROW, COLUMN))
-        # self.head1 = -np.ones(ROW+COLUMN)
-        # self.head2 = -np.ones(ROW+COLUMN)
-        
-        # self.head1[self.p1.y//SCALE] = 1
-        # self.head1[ROW+self.p1.x//SCALE] = 1
-        # self.head2[self.p2.y//SCALE] = 1
-        # self.head2[ROW+self.p2.x//SCALE] = 1
 
         # add a padding to the observation image
         self.observation = np.array(ImageOps.expand(Image.fromarray(self.observation), border=1, fill=0))
-
-        self.observation, _ = self.obs_to_img(self.observation, self.p1, self.p2)
+        self.observation = self.obs_to_img(self.observation, self.p1)
 
         if self.render_mode == 'human':
             self.clock = pygame.time.Clock()
             self.render()
         
-            
-        return [self.observation,{}]
+        return self.observation.flatten(), {}
         
     def render(self):
         # Background
@@ -157,10 +111,9 @@ class TronEnv(gym.Env):
         pygame.draw.rect(self.display, 'WHITE', (WIDTH+SCALE, SCALE, 1, HEIGHT)) # RIGHT
         
         # Players
-        for i, player in enumerate(self.players):
-            for t in player.trail:
-                pygame.draw.rect(self.display, (0, (not i)*150,i*150), (t[0], t[1], SCALE, SCALE))
-            pygame.draw.rect(self.display, (0, (not i)*255,i*255), (player.x, player.y, SCALE, SCALE))
+        for t in self.p1.trail:
+            pygame.draw.rect(self.display, (0, 150, 0), (t[0], t[1], SCALE, SCALE))
+        pygame.draw.rect(self.display, (0, 255, 0), (self.p1.x, self.p1.y, SCALE, SCALE))
         
         pygame.display.update()
         self.clock.tick(FPS)

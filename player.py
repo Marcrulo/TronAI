@@ -14,7 +14,7 @@ class Player:
     def kill(self):
         self.alive = False
         
-    def update(self, p_opponent):
+    def update(self):
         if not self.alive:
             return 
         
@@ -61,19 +61,6 @@ class Player:
             self.kill()
             print("collision with bottom border") 
             return
-        
-        # collision with other player
-        if self.x == p_opponent.x and self.y == p_opponent.y:
-            self.kill()
-            # print("collision with opponent")
-            return
-        
-        for t in p_opponent.trail:
-            if self.x == t[0] and self.y == t[1]:
-                self.kill()
-                # print("collision with opponent")
-                return
-                
                 
         # add to trail
         self.trail.append((self.x, self.y))
